@@ -5,7 +5,6 @@
 //  Created by Alejandro Pasccon on 4/20/16.
 //  Copyright © 2016 Alejandro Pasccon. All rights reserved.
 //
-
 import UIKit
 
 open class SearchTextField: UITextField {
@@ -24,7 +23,7 @@ open class SearchTextField: UITextField {
     
     /// Indicate if keyboard is showing or not
     open var keyboardIsShowing = false
-
+    
     /// How long to wait before deciding typing has stopped
     open var typingStoppedDelay = 0.8
     
@@ -35,12 +34,12 @@ open class SearchTextField: UITextField {
             
             if let placeholderColor = theme.placeholderColor {
                 if let placeholderString = placeholder {
-                    self.attributedPlaceholder = NSAttributedString(string: placeholderString, attributes: [NSAttributedStringKey.foregroundColor: placeholderColor])
+                    self.attributedPlaceholder = NSAttributedString(string: placeholderString, attributes: [NSAttributedString.Key.foregroundColor: placeholderColor])
                 }
                 
                 self.placeholderLabel?.textColor = placeholderColor
             }
-           
+            
             if let hightlightedFont = self.highlightAttributes[.font] as? UIFont {
                 self.highlightAttributes[.font] = hightlightedFont.withSize(self.theme.font.pointSize)
             }
@@ -82,7 +81,7 @@ open class SearchTextField: UITextField {
     open var userStoppedTypingHandler: (() -> Void)?
     
     /// Set your custom set of attributes in order to highlight the string found in each item
-    open var highlightAttributes: [NSAttributedStringKey: AnyObject] = [.font: UIFont.boldSystemFont(ofSize: 10)]
+    open var highlightAttributes: [NSAttributedString.Key: AnyObject] = [.font: UIFont.boldSystemFont(ofSize: 10)]
     
     /// Start showing the default loading indicator, useful for searches that take some time.
     open func showLoadingIndicator() {
@@ -114,7 +113,7 @@ open class SearchTextField: UITextField {
     
     /// Min number of characters to start filtering
     open var minCharactersNumberToStartFiltering: Int = 0
-
+    
     /// Force no filtering (display the entire filtered data source)
     open var forceNoFiltering: Bool = false
     
@@ -126,7 +125,7 @@ open class SearchTextField: UITextField {
     
     /// Set the results list's header
     open var resultsListHeader: UIView?
-
+    
     // Move the table around to customize for your layout
     open var tableXOffset: CGFloat = 0.0
     open var tableYOffset: CGFloat = 0.0
@@ -144,7 +143,7 @@ open class SearchTextField: UITextField {
     fileprivate var timer: Timer? = nil
     fileprivate var placeholderLabel: UILabel?
     fileprivate static let cellIdentifier = "APSearchTextFieldCell"
-    fileprivate let indicator = UIActivityIndicatorView(activityIndicatorStyle: .gray)
+    fileprivate let indicator = UIActivityIndicatorView(style: .gray)
     fileprivate var maxTableViewSize: CGFloat = 0
     
     fileprivate var filteredResults = [SearchTextFieldItem]()
@@ -178,9 +177,9 @@ open class SearchTextField: UITextField {
         self.addTarget(self, action: #selector(SearchTextField.textFieldDidEndEditing), for: .editingDidEnd)
         self.addTarget(self, action: #selector(SearchTextField.textFieldDidEndEditingOnExit), for: .editingDidEndOnExit)
         
-        NotificationCenter.default.addObserver(self, selector: #selector(SearchTextField.keyboardWillShow(_:)), name: NSNotification.Name.UIKeyboardWillShow, object: nil)
-        NotificationCenter.default.addObserver(self, selector: #selector(SearchTextField.keyboardWillHide(_:)), name: NSNotification.Name.UIKeyboardWillHide, object: nil)
-        NotificationCenter.default.addObserver(self, selector: #selector(SearchTextField.keyboardDidChangeFrame(_:)), name: NSNotification.Name.UIKeyboardDidChangeFrame, object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(SearchTextField.keyboardWillShow(_:)), name: UIResponder.keyboardWillShowNotification, object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(SearchTextField.keyboardWillHide(_:)), name: UIResponder.keyboardWillHideNotification, object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(SearchTextField.keyboardDidChangeFrame(_:)), name: UIResponder.keyboardDidChangeFrameNotification, object: nil)
     }
     
     override open func layoutSubviews() {
@@ -251,7 +250,7 @@ open class SearchTextField: UITextField {
             placeholderLabel?.backgroundColor = UIColor.clear
             placeholderLabel?.lineBreakMode = .byClipping
             
-            if let placeholderColor = self.attributedPlaceholder?.attribute(NSAttributedStringKey.foregroundColor, at: 0, effectiveRange: nil) as? UIColor {
+            if let placeholderColor = self.attributedPlaceholder?.attribute(NSAttributedString.Key.foregroundColor, at: 0, effectiveRange: nil) as? UIColor {
                 placeholderLabel?.textColor = placeholderColor
             } else {
                 placeholderLabel?.textColor = UIColor ( red: 0.8, green: 0.8, blue: 0.8, alpha: 1.0 )
@@ -316,11 +315,11 @@ open class SearchTextField: UITextField {
                 })
             }
             
-            superview?.bringSubview(toFront: tableView)
-            superview?.bringSubview(toFront: shadowView!)
+            superview?.bringSubviewToFront(tableView)
+            superview?.bringSubviewToFront(shadowView!)
             
             if self.isFirstResponder {
-                superview?.bringSubview(toFront: self)
+                superview?.bringSubviewToFront(self)
             }
             
             tableView.layer.borderColor = theme.borderColor.cgColor
@@ -336,7 +335,7 @@ open class SearchTextField: UITextField {
     @objc open func keyboardWillShow(_ notification: Notification) {
         if !keyboardIsShowing && isEditing {
             keyboardIsShowing = true
-            keyboardFrame = ((notification as NSNotification).userInfo![UIKeyboardFrameEndUserInfoKey] as! NSValue).cgRectValue
+            keyboardFrame = ((notification as NSNotification).userInfo![UIResponder.keyboardFrameEndUserInfoKey] as! NSValue).cgRectValue
             interactedWith = true
             prepareDrawTableResult()
         }
@@ -352,7 +351,7 @@ open class SearchTextField: UITextField {
     
     @objc open func keyboardDidChangeFrame(_ notification: Notification) {
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) { [weak self] in
-            self?.keyboardFrame = ((notification as NSNotification).userInfo![UIKeyboardFrameEndUserInfoKey] as! NSValue).cgRectValue
+            self?.keyboardFrame = ((notification as NSNotification).userInfo![UIResponder.keyboardFrameEndUserInfoKey] as! NSValue).cgRectValue
             self?.prepareDrawTableResult()
         }
     }
@@ -493,11 +492,11 @@ open class SearchTextField: UITextField {
     }
     
     // Look for Font attribute, and if it exists, adapt to the subtitle font size
-    fileprivate func highlightAttributesForSubtitle() -> [NSAttributedStringKey: AnyObject] {
-        var highlightAttributesForSubtitle = [NSAttributedStringKey: AnyObject]()
+    fileprivate func highlightAttributesForSubtitle() -> [NSAttributedString.Key: AnyObject] {
+        var highlightAttributesForSubtitle = [NSAttributedString.Key: AnyObject]()
         
         for attr in highlightAttributes {
-            if attr.0 == NSAttributedStringKey.font {
+            if attr.0 == NSAttributedString.Key.font {
                 let fontName = (attr.1 as! UIFont).fontName
                 let pointSize = (attr.1 as! UIFont).pointSize * fontConversionRate
                 highlightAttributesForSubtitle[attr.0] = UIFont(name: fontName, size: pointSize)
@@ -606,7 +605,6 @@ extension SearchTextField: UITableViewDelegate, UITableViewDataSource {
 
 ////////////////////////////////////////////////////////////////////////
 // Search Text Field Theme
-
 public struct SearchTextFieldTheme {
     public var cellHeight: CGFloat
     public var bgColor: UIColor
@@ -639,7 +637,6 @@ public struct SearchTextFieldTheme {
 
 ////////////////////////////////////////////////////////////////////////
 // Filter Item
-
 open class SearchTextFieldItem {
     // Private vars
     fileprivate var attributedTitle: NSMutableAttributedString?
@@ -670,7 +667,6 @@ public typealias SearchTextFieldItemHandler = (_ filteredResults: [SearchTextFie
 
 ////////////////////////////////////////////////////////////////////////
 // Suggestions List Direction
-
 enum Direction {
     case down
     case up
